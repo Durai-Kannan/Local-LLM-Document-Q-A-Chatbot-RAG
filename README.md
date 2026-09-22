@@ -115,7 +115,7 @@ ollama list
 Clone the repository and enter the directory:
 
 ```bash
-cd task2-local-rag
+cd Local-LLM-Document-Q-A-Chatbot-RAG
 ```
 
 Create and activate a virtual environment:
