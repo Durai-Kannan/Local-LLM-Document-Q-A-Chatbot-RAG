@@ -33,6 +33,27 @@ This project is explicitly tuned to run smoothly on standard laptops with **8 GB
 
 ## 🏗️ Architecture Flow
 
+```mermaid
+flowchart TD
+    subgraph Ingestion["1. Document Ingestion Pipeline"]
+        A["Document (.pdf, .docx, .txt, .md)"] --> B["Document Loader (PyMuPDF / docx)"]
+        B --> C["Clean & Chunk (700 chars / 100 overlap)"]
+        C --> D["Sentence Transformers (all-MiniLM-L6-v2)"]
+        D --> E[("ChromaDB Persistent Store")]
+    end
+
+    subgraph RAG["2. Query & Answer Pipeline"]
+        F["User Question"] --> G["Query Embedding (384-d)"]
+        G --> H["ChromaDB Vector Search (Top-K=5)"]
+        E --> H
+        H --> I["Grounded Prompt Builder (Strict Rules)"]
+        I --> J["Ollama Local LLM (qwen2.5 model)"]
+        J --> K["Answer + Source Citations"]
+    end
+```
+
+### ASCII Pipeline Diagram
+
 ```text
                   DOCUMENT INGESTION PIPELINE
                                │
@@ -65,33 +86,6 @@ This project is explicitly tuned to run smoothly on standard laptops with **8 GB
                                │
                                ▼
                     Answer + Page & Chunk Citations
-```
-
-### Mermaid Sequence
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User
-    participant UI as Web Frontend
-    participant API as FastAPI Backend
-    participant Vector as ChromaDB
-    participant Embed as Sentence Transformers
-    participant LLM as Ollama LLM
-
-    User->>UI: Upload Document
-    UI->>API: POST /api/documents/upload
-    API->>Embed: Compute Chunks Vector
-    API->>Vector: Store Embeddings & Metadata
-    API-->>UI: Ingestion Success
-
-    User->>UI: Ask Question
-    UI->>API: POST /api/chat
-    API->>Vector: Vector Search (Similarity > 0.3)
-    Vector-->>API: Relevant Chunks + Page Metadata
-    API->>LLM: Send Grounded Prompt
-    LLM-->>API: Grounded Answer
-    API-->>UI: Answer + Citations
 ```
 
 ---
@@ -213,16 +207,13 @@ python -m pytest -v
 
 | Activity | Time Spent |
 | :--- | :--- |
-| **FastAPI Backend & Project Setup** | 1.5 hours |
-| **Multi-Format Document Ingestion (PyMuPDF, docx, txt)** | 2.0 hours |
-| **Text Chunking & SHA-256 Deduplication** | 1.5 hours |
-| **Local Embeddings Integration (Sentence Transformers)** | 1.0 hour |
-| **ChromaDB Persistent Store Setup** | 1.5 hours |
-| **Ollama Local LLM Prompt Engineering & Grounding** | 2.0 hours |
-| **Frontend Glassmorphism UI & Citation Inspector** | 2.5 hours |
-| **CLI Ingestion Script & Automated Pytest Suite** | 2.0 hours |
-| **Documentation & Architecture Diagrams** | 1.5 hours |
-| **Total Development Time** | **15.5 hours** |
+| **FastAPI Backend & Project Setup** | 0.5 hours |
+| **Multi-Format Document Ingestion & Chunking** | 1.0 hour |
+| **Sentence Transformers Embeddings & ChromaDB Setup** | 1.0 hour |
+| **Ollama Local LLM Integration & Grounded Prompts** | 1.0 hour |
+| **Frontend Glassmorphism Web UI & Citation Inspector** | 1.0 hour |
+| **CLI Ingestion Script, Automated Tests & Documentation** | 1.5 hours |
+| **Total Development Time** | **6.0 hours** |
 
 ---
 
