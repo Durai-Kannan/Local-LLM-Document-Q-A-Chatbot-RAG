@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocuMind — Modern Local Document Q&A</title>
+    
+    <!-- Modern Sans-Serif Typography: Inter & Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Clean Minimalist Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Backdrop for Mobile -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+        <!-- Sidebar Navigation & Controls -->
+        <aside class="sidebar-panel" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-group">
+                    <div class="brand-logo">
+                        <i class="fa-solid fa-layer-group"></i>
+                    </div>
+                    <div class="brand-text">
+                        <h1 class="brand-name">DocuMind</h1>
+                        <span class="brand-tag">Local Vault RAG</span>
+                    </div>
+                </div>
+                <button class="icon-btn close-sidebar-btn" id="close-sidebar-mobile" title="Close menu">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Engine Health Status Pill -->
+            <div class="health-card" id="health-card">
+                <div class="status-indicator status-connecting" id="health-status-dot"></div>
+                <div class="health-info">
+                    <span class="health-title" id="health-status-text">Connecting to Engine...</span>
+                    <span class="health-sub" id="health-model-name">Ollama Engine</span>
+                </div>
+            </div>
+
+            <!-- Document Ingestion Area -->
+            <div class="sidebar-section">
+                <div class="section-header">
+                    <span class="section-title">Upload Documents</span>
+                </div>
+                <div class="upload-dropzone" id="drop-zone">
+                    <input type="file" id="file-input" accept=".pdf,.docx,.txt,.md" hidden>
+                    <div class="drop-icon">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </div>
+                    <p class="drop-prompt">Drop document here or <span class="browse-link">browse</span></p>
+                    <span class="drop-hint">PDF, DOCX, TXT, MD up to 50MB</span>
+                    
+                    <div class="upload-progress-box" id="upload-progress" style="display: none;">
+                        <span class="spinner"></span>
+                        <span id="upload-status-text" class="upload-status-text">Parsing & Indexing...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indexed Documents Stack -->
+            <div class="sidebar-section expand-section">
+                <div class="section-header">
+                    <span class="section-title">Knowledge Base (<span id="doc-count">0</span>)</span>
+                    <button class="icon-btn-ghost" id="refresh-docs-btn" title="Refresh document list">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                </div>
+                <div class="document-list" id="document-list">
+                    <div class="empty-docs-state">
+                        <i class="fa-regular fa-folder-open"></i>
+                        <p>No documents uploaded yet</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-workspace">
+            <!-- Workspace App Bar -->
+            <header class="app-header">
+                <div class="app-header-left">
+                    <button class="icon-btn sidebar-toggle-btn" id="toggle-sidebar" title="Toggle Sidebar">
+                        <i class="fa-solid fa-bars-staggered"></i>
+                    </button>
+                    <div class="breadcrumb-trail">
+                        <span class="crumb-parent">Knowledge Base</span>
+                        <i class="fa-solid fa-chevron-right crumb-separator"></i>
+                        <span class="crumb-current">Document Q&A</span>
+                    </div>
+                </div>
+                <div class="app-header-right">
+                    <button class="btn btn-secondary" id="clear-chat-btn">
+                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                        <span>Clear Chat</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chat Viewport Stream -->
+            <div class="chat-viewport" id="chat-viewport">
+                <div class="chat-container">
+                    <!-- Clean Empty Welcome Slate -->
+                    <div class="welcome-card" id="welcome-card">
+                        <div class="welcome-icon">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </div>
+                        <h2 class="welcome-title">Document Q&A Assistant</h2>
+                        <p class="welcome-description">
+                            Upload documents to your knowledge base using the sidebar, then ask questions to receive accurate, grounded responses backed by page citations.
+                        </p>
+
+                        <div class="suggestion-group">
+                            <span class="suggestion-label">Try asking:</span>
+                            <div class="suggestion-chips">
+                                <button class="suggestion-chip" data-prompt="Summarize the key points of the uploaded documents.">
+                                    <i class="fa-regular fa-lightbulb"></i> Summarize key points
+                                </button>
+                                <button class="suggestion-chip" data-prompt="What are the main conclusions and recommendations?">
+                                    <i class="fa-regular fa-file-lines"></i> Main conclusions
+                                </button>
+                                <button class="suggestion-chip" data-prompt="List all important dates, deadlines, or metrics mentioned.">
+                                    <i class="fa-regular fa-calendar-check"></i> Dates & metrics
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Chat Messages Stream -->
+                    <div class="chat-messages-list" id="chat-messages"></div>
+                </div>
+            </div>
+
+            <!-- Fixed Bottom Prompt Bar -->
+            <div class="prompt-section">
+                <div class="prompt-wrapper">
+                    <form class="prompt-form" id="chat-form">
+                        <div class="prompt-input-box">
+                            <textarea 
+                                id="user-input" 
+                                placeholder="Ask a question about your documents..." 
+                                rows="1" 
+                                required></textarea>
+                            <button type="submit" class="btn-send" id="send-btn" title="Send question">
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <div class="prompt-caption">
+                        <i class="fa-solid fa-shield-halved"></i> 100% Private Local RAG — Powered by Ollama & ChromaDB
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Citation Inspector Modal -->
+    <div class="modal-overlay" id="source-modal" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title-box">
+                    <i class="fa-solid fa-quote-left"></i>
+                    <h3 id="modal-title">Source Citation</h3>
+                </div>
+                <button class="modal-close-btn" id="close-modal-btn" title="Close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="citation-meta-grid" id="modal-meta"></div>
+                <div class="citation-snippet-wrapper">
+                    <span class="snippet-label">Extracted Content Chunk</span>
+                    <div class="snippet-box" id="modal-content"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="modal-copy-btn">
+                    <i class="fa-regular fa-copy"></i> Copy Text
+                </button>
+                <button class="btn btn-primary" id="modal-done-btn">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/chat.js"></script>
+</body>
+</html>

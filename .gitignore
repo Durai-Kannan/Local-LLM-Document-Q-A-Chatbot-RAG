@@ -1,0 +1,33 @@
+# Python virtual environment
+venv/
+.venv/
+env/
+ENV/
+
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment configuration
+.env
+
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local databases & uploaded documents
+data/chroma/*
+!data/chroma/.gitkeep
+data/documents/*
+!data/documents/.gitkeep
+
+# IDE / OS specific
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+*.log
